@@ -1,0 +1,8 @@
+{
+"outage":{"category":"technical","reply":"We are investigating the verified service disruption. We will share updates as information becomes available.","source_ids":[],"usage":null},
+"ambiguous":{"category":"uncertain","reply":"Thank you for reporting this. Could you share the affected feature and any error message? We are investigating.","source_ids":[],"usage":null},
+"transport":{"error":"Recorded synthetic provider transport failure"},
+"malformed":{"category":"technical","reply":15},
+"promise":{"category":"billing","reply":"We guarantee a refund tomorrow.","source_ids":[],"usage":null},
+"missing_usage":{"category":"technical","reply":"We are investigating.","source_ids":[]}
+}

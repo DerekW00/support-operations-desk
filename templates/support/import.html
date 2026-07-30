@@ -1,0 +1,6 @@
+{% extends 'base.html' %}{% block content %}<a class="back" href="/">← Queue</a><div class="page-heading"><div><p class="eyebrow">INGESTION / ATOMIC BATCH</p><h1>Import tickets</h1><p class="lede">Up to 50 tickets · 256 KiB · 8,000 characters per message</p></div></div><div class="workspace"><section class="panel">{% if error %}<p class="error" role="alert">{{ error }}</p>{% endif %}<form method="post">{% csrf_token %}{{ form.as_p }}<button>Import batch</button></form></section><section class="panel"><h2>Ticket schema</h2><pre>[{
+  "event_id": "demo-new-01",
+  "account_id": 1,
+  "subject": "Feature unavailable",
+  "text": "Please investigate."
+}]</pre><p>Use an account from this workspace:</p><ul>{% for account in accounts %}<li>#{{ account.pk }} · {{ account.name }}</li>{% endfor %}</ul><p class="muted">An exact event retry is idempotent. Reusing its ID with changed content conflicts. One bad member rejects the whole batch.</p></section></div>{% endblock %}

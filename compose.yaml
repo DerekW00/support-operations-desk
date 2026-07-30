@@ -1,0 +1,14 @@
+name: support-operations-desk
+services:
+  database:
+    image: postgres:16.15
+    environment:
+      POSTGRES_USER: support
+      POSTGRES_DB: support_ops
+      POSTGRES_HOST_AUTH_METHOD: trust
+    ports:
+      - "127.0.0.1:15531:5432"
+    volumes:
+      - support_data:/var/lib/postgresql/data
+volumes:
+  support_data:

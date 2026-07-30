@@ -1,0 +1,20 @@
+[project]
+name = "support-operations-desk"
+version = "0.1.0"
+requires-python = ">=3.12,<3.13"
+dependencies = ["Django==5.2.7", "psycopg[binary]==3.2.12"]
+[dependency-groups]
+dev = ["pytest==8.4.2", "pytest-django==4.11.1", "ruff==0.14.2", "mypy==1.18.2", "django-stubs==5.2.7", "playwright==1.64.1"]
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "config.settings"
+testpaths = ["tests"]
+[tool.ruff]
+line-length = 100
+[tool.mypy]
+plugins = ["mypy_django_plugin.main"]
+exclude = ["tests", "migrations"]
+[[tool.mypy.overrides]]
+module = ["psycopg.*"]
+ignore_missing_imports = true
+[tool.django-stubs]
+django_settings_module = "config.settings"
