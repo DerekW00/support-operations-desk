@@ -3,6 +3,7 @@ from support.provider import CATEGORIES
 
 
 class ReviewForm(forms.Form):
+    basis_suggestion_id = forms.IntegerField(required=False, min_value=1, widget=forms.HiddenInput)
     expected_revision = forms.IntegerField(min_value=0, widget=forms.HiddenInput)
     category = forms.ChoiceField(choices=[(c, c.title()) for c in CATEGORIES])
     reply = forms.CharField(

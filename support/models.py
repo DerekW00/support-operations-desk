@@ -54,6 +54,9 @@ class Ticket(models.Model):
 
 
 class Review(models.Model):
+    basis_suggestion = models.ForeignKey(
+        "SuggestionRecord", null=True, on_delete=models.PROTECT, related_name="based_reviews"
+    )
     ticket = models.ForeignKey(Ticket, on_delete=models.PROTECT, related_name="reviews")
     actor = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
     revision = models.PositiveIntegerField()

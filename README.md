@@ -43,7 +43,9 @@ The worker handles one claim per --once invocation. A recorded transport failure
 
 1. Open the urgent workspace ticket: its verified account outage gives a one-hour SLA.
 2. Inspect the cited synthetic availability guidance.
-3. Edit the category/reply and approve. Approval creates an append-only revision; nothing is emailed.
+3. Correct the category and compose a reply from the displayed approved statement library, then approve. Approval creates an append-only revision; nothing is emailed.
+The reply contract is deliberately bounded: add, remove, or reorder up to 12 exact library statements, separated by whitespace. Custom prose is rejected at both provider and human-review boundaries. This is a deterministic permitted-language contract, not an unrestricted natural-language safety claim. A newly generated suggestion loads its own content and evidence as unapproved; historical approvals stay attached to their original basis.
+
 4. Open the same ticket in two tabs. Save one, then submit the other: the stale revision visibly conflicts.
 5. Inspect the refund-request ticket: the frozen provider's financial/timing promise is rejected. Customer text cannot grant entitlements.
 6. Import JSON through **Import tickets**. Account IDs are listed on that page; only the signed-in organization is available.

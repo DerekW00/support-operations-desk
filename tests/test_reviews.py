@@ -37,7 +37,7 @@ def test_foreign_and_unknown_citations_rejected(domain):
                 ticket,
                 {
                     "category": "technical",
-                    "reply": "Investigating.",
+                    "reply": "We are investigating.",
                     "source_ids": ids,
                     "usage": None,
                 },

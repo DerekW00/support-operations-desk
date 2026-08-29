@@ -17,6 +17,8 @@ def save_review(
     category: str,
     reply: str,
     approved: bool,
+    *,
+    basis_suggestion_id: int | None = None,
 ) -> Review:
     try:
         ticket = Ticket.objects.select_for_update().get(pk=ticket_id, organization_id=org_id)
@@ -30,13 +32,18 @@ def save_review(
         )
     validate_reply(category, reply)
     suggestion = ticket.suggestions.first()
-    source_ids = suggestion.source_ids if suggestion else []
+    if (suggestion.pk if suggestion else None) != basis_suggestion_id:
+        raise ReviewConflict(
+            "The evidence basis changed. Reload and review the current suggestion."
+        )
+    source_ids = list(suggestion.source_ids) if suggestion else []
     if Source.objects.filter(organization_id=org_id, pk__in=source_ids).count() != len(source_ids):
         raise InvalidSuggestion("Review references unavailable evidence.")
     ticket.revision += 1
     ticket.save(update_fields=["revision"])
     return Review.objects.create(
         ticket=ticket,
+        basis_suggestion=suggestion,
         actor_id=actor_id,
         revision=ticket.revision,
         category=category,

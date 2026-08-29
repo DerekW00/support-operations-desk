@@ -5,7 +5,7 @@ import pytest
 from playwright.sync_api import sync_playwright
 from support.ingestion import ingest_ticket
 from support.jobs import claim, execute
-from support.models import Outage
+from support.models import Outage, Source
 from tests.test_ingestion import event
 
 
@@ -16,6 +16,9 @@ def test_outage_review_and_stale_tab(live_server, domain):
         organization=org, account=account, verified=True, title="Verified synthetic outage"
     )
     ticket, _ = ingest_ticket(org.pk, event(account, subject="Urgent: workspace unavailable"))
+    source_b = Source.objects.create(
+        organization=org, title="New account guidance", body="Synthetic B"
+    )
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=True)
         context = browser.new_context(viewport={"width": 1200, "height": 900})
@@ -56,4 +59,39 @@ def test_outage_review_and_stale_tab(live_server, domain):
         page.screenshot(path=str(evidence / "approved-review.png"), full_page=True)
         page.screenshot(path=str(evidence / "workflow-review.jpg"), type="jpeg", quality=70)
         other.screenshot(path=str(evidence / "stale-conflict.png"), full_page=True)
+        page.get_by_role("button", name="Generate fixture suggestion").click()
+
+        def new_suggestion():
+            close_old_connections()
+            lease = claim()
+            result = execute(
+                lease.pk,
+                lease.claim_token,
+                lambda t, s: {
+                    "category": "account",
+                    "reply": "We are reviewing the account details.",
+                    "source_ids": [source_b.pk],
+                    "usage": None,
+                },
+            )
+            close_old_connections()
+            return result
+
+        with ThreadPoolExecutor(max_workers=1) as pool:
+            assert pool.submit(new_suggestion).result()
+        page.reload()
+        assert (
+            page.get_by_label("Draft reply").input_value()
+            == "We are reviewing the account details."
+        )
+        assert page.locator(".review-panel").get_by_text("Needs review", exact=True).count() == 1
+        assert page.get_by_text("New suggestion requires review.", exact=False).count() == 1
+        assert page.get_by_role("link", name="New account guidance", exact=True).count() == 1
+        page.screenshot(path=str(evidence / "new-evidence-review.png"), full_page=True)
+        page.get_by_label("Draft reply").fill("We will return your payment.")
+        page.get_by_role("button", name="Approve revision").click()
+        assert page.get_by_role("alert").inner_text().startswith("Use only the approved statements")
+        page.get_by_label("Draft reply").fill("We are reviewing the account details.")
+        page.get_by_role("button", name="Approve revision").click()
+        assert page.locator(".review-panel").get_by_text("Approved", exact=True).count() == 1
         browser.close()

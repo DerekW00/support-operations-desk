@@ -1,5 +1,4 @@
 import json
-import re
 from pathlib import Path
 from typing import TypedDict, cast
 from support.models import Ticket, Source
@@ -18,22 +17,45 @@ class Suggestion(TypedDict):
     usage: int | None
 
 
+PERMITTED_STATEMENTS = (
+    "Thank you for reporting this.",
+    "Could you share the affected feature and any error message?",
+    "We are investigating.",
+    "We are investigating the service interruption.",
+    "We are investigating the verified service disruption.",
+    "We will share updates as information becomes available.",
+    "No resolution time or financial adjustment is confirmed.",
+    "Please share the invoice reference through the usual support channel.",
+    "We are reviewing the account details.",
+)
+
+
 def validate_reply(category: str, reply: str) -> None:
     if (
-        category not in CATEGORIES
+        not isinstance(category, str)
+        or category not in CATEGORIES
         or not isinstance(reply, str)
         or not reply.strip()
         or len(reply) > 4000
     ):
         raise InvalidSuggestion("Select an approved category and a reply of 1–4,000 characters.")
-    if re.search(
-        r"\b(refund|credit|guarantee\w*|tomorrow|within\s+\d+|by\s+(?:monday|tuesday|wednesday|thursday|friday|saturday|sunday)|in\s+\d+\s+(?:hours?|minutes?|days?))\b",
-        reply,
-        re.I,
-    ):
-        raise InvalidSuggestion(
-            "Unsupported financial or guaranteed timing promise. Remove it before saving."
-        )
+    # A finite language, not a claim to classify unrestricted natural language:
+    # only complete exact library statements separated by whitespace are admitted.
+    remaining = " ".join(reply.split())
+    count = 0
+    while remaining:
+        for statement in PERMITTED_STATEMENTS:
+            if remaining == statement or remaining.startswith(statement + " "):
+                remaining = remaining[len(statement) :].strip()
+                count += 1
+                break
+        else:
+            raise InvalidSuggestion(
+                "Use only the approved statements shown below. Custom sentences and "
+                "financial or resolution-time commitments cannot be saved."
+            )
+        if count > 12:
+            raise InvalidSuggestion("Compose at most 12 approved statements.")
 
 
 def validate_suggestion(ticket: Ticket, result: object, sources: list[Source]) -> Suggestion:

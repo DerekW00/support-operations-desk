@@ -9,7 +9,7 @@ from support.forms import ImportForm, ReviewForm
 from support.ingestion import ImportConflict, InvalidImport, TicketInput, ingest_bulk
 from support.jobs import cancel, enqueue
 from support.models import Account, Job, Membership, Organization, Source, Ticket
-from support.provider import InvalidSuggestion
+from support.provider import InvalidSuggestion, PERMITTED_STATEMENTS
 from support.reviews import ReviewConflict, save_review
 
 
@@ -53,11 +53,38 @@ def _detail(
 ) -> HttpResponse:
     review = ticket.reviews.first()
     suggestion = ticket.suggestions.first()
+    # Historical approval never labels newer suggestion content as approved.
+    current_approved = bool(
+        review
+        and review.approved
+        and review.revision == ticket.revision
+        and review.basis_suggestion_id == (suggestion.pk if suggestion else None)
+    )
+    newer_suggestion = bool(
+        suggestion
+        and (
+            not review
+            or suggestion.revision > review.revision
+            or review.basis_suggestion_id != suggestion.pk
+        )
+    )
     if form is None:
-        initial = review or suggestion
+        initial = (
+            review
+            if review
+            and (
+                not suggestion
+                or (
+                    review.basis_suggestion_id == suggestion.pk
+                    and review.revision > suggestion.revision
+                )
+            )
+            else suggestion
+        )
         form = ReviewForm(
             initial={
                 "expected_revision": ticket.revision,
+                "basis_suggestion_id": suggestion.pk if suggestion else None,
                 "category": initial.category if initial else "uncertain",
                 "reply": initial.reply if initial else "",
             }
@@ -72,6 +99,9 @@ def _detail(
             "ticket": ticket,
             "form": form,
             "review": review,
+            "current_approved": current_approved,
+            "newer_suggestion": newer_suggestion,
+            "permitted_statements": PERMITTED_STATEMENTS,
             "suggestion": suggestion,
             "citations": citations,
             "history": ticket.reviews.select_related("actor"),
@@ -106,6 +136,7 @@ def review(request: HttpRequest, ticket_id: int) -> HttpResponse:
             form.cleaned_data["category"],
             form.cleaned_data["reply"],
             request.POST.get("action") == "approve",
+            basis_suggestion_id=form.cleaned_data["basis_suggestion_id"],
         )
     except ReviewConflict as exc:
         return _detail(request, ticket, form, str(exc), 409)
