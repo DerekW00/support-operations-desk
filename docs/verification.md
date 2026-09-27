@@ -23,3 +23,5 @@ The RED logs also preserve initial test-harness issues where present. Missing im
 No live API calls, live-model benchmarks, deployments or production measurements are part of these checks.
 
 Fix-round evidence is retained in fix1-red-review-findings.log (four original behavioral failures), fix1-red-independent-boundaries.log (seven independent failures against the reviewed boundary code with fixes restored in finally), fix1-green-review-findings.log, fix1-verify-final.log and fix1-pytest-final.log. new-evidence-review.png shows the superseding suggestion awaiting review.
+
+Whole-delivery portability: browser artifacts use a writable temporary directory by default; BROWSER_EVIDENCE_DIR overrides/creates the destination (for example `$PWD/.browser-evidence`). Final VPS evidence explicitly sets BROWSER_EVIDENCE_DIR=/Users/dw/code/portfolio-python/python-evidence/support-operations-desk. Per-product session/CSRF cookie names preserve same-browser logins across loopback ports; a retained cross-product Playwright probe exercises concurrent sessions and saved CSRF forms without disabling protection.

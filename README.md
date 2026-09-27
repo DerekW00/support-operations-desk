@@ -65,10 +65,12 @@ make browser
 uv run pytest
 ```
 
-The verified VPS already has project-local Chromium and its required shared libraries; source runtime-env.sh and do not reinstall system dependencies. Browser evidence is written outside this repository at `/Users/dw/code/portfolio-python/python-evidence/support-operations-desk/`.
+The verified VPS already has project-local Chromium and its required shared libraries; source runtime-env.sh and do not reinstall system dependencies. Browser evidence defaults to a newly created writable temporary directory. Set `BROWSER_EVIDENCE_DIR="$PWD/.browser-evidence" make browser` to retain screenshots in an ignored checkout-local directory, or supply any writable destination. Verified VPS gates explicitly set the canonical external evidence directory.
 
 `make verify` checks the frozen dependency graph, Django configuration, migration drift, Ruff lint/format, mypy, all nonbrowser PostgreSQL tests and the six-case fixture evaluation. Browser journeys are a separate required delivery gate. See [verification](docs/verification.md), [architecture](docs/architecture.md), [tradeoffs](docs/tradeoffs.md), [contributions](docs/contributions.md), and [provenance](docs/data-provenance.md).
 
 ## Scope
 
 This is an authenticated local portfolio product using frozen scripted responses. Live-model quality, latency, spend, production scale and business impact are unmeasured. Production hosting, email delivery, SSO, organization switching, arbitrary attachments and live providers are outside this implementation. Outside demo mode set DJANGO_SECRET_KEY explicitly and supply deployment-specific secure-cookie/TLS/host configuration before considering hosting.
+
+Same-host demo cookies use `support_ops_session` and `support_ops_csrf`, so the three loopback products can retain separate sessions and CSRF forms across ports. Cookie domain/path and CSRF enforcement retain their normal Django scope.

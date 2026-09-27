@@ -1,4 +1,3 @@
-from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor
 from django.db import close_old_connections
 import pytest
@@ -7,6 +6,7 @@ from support.ingestion import ingest_ticket
 from support.jobs import claim, execute
 from support.models import Outage, Source
 from tests.test_ingestion import event
+from tests.browser_artifacts import evidence_directory
 
 
 @pytest.mark.django_db(transaction=True)
@@ -55,7 +55,7 @@ def test_outage_review_and_stale_tab(live_server, domain):
         other.get_by_label("Draft reply").fill("An obsolete reply.")
         other.get_by_role("button", name="Approve revision").click()
         assert other.get_by_role("alert").inner_text().startswith("This review changed")
-        evidence = Path("/Users/dw/code/portfolio-python/python-evidence/support-operations-desk")
+        evidence = evidence_directory()
         page.screenshot(path=str(evidence / "approved-review.png"), full_page=True)
         page.screenshot(path=str(evidence / "workflow-review.jpg"), type="jpeg", quality=70)
         other.screenshot(path=str(evidence / "stale-conflict.png"), full_page=True)
