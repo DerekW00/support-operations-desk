@@ -1,27 +1,35 @@
 # Verification
 
-Run setup/migration from README before make verify. PostgreSQL is required for domain tests and creates test_support_ops; the configured local development user needs CREATEDB. There is no SQLite fallback.
+Use the PostgreSQL environment from [README](../README.md). The development role needs permission to create the test database; there is no SQLite fallback.
 
-## Required gates
+## Commands
 
-- uv sync --frozen: committed lockfile and CPython >=3.12,<3.13.
-- python manage.py check and makemigrations --check --dry-run.
-- Ruff lint and format checks.
-- mypy over support, config and manage.py using Django stubs.
-- pytest against real PostgreSQL: policy boundaries, prompt-injection nonauthority, exact/conflicting retries, bulk rollback/caps, concurrent changed events, revision conflicts, bounded statement compositions, independent provider/human commitment rejection, A→approve→B→reload provenance, missing/old/forged evidence bases, invalid citations, provider errors/usage, claim races, cancellation/reclaim/expiry fences, actual publication lock-wait expiry, tenant HTTP boundaries and CSRF.
-- python manage.py evaluate: six frozen functional expectations, rolled back after execution.
-- pytest tests/test_browser.py: Chromium login, urgent queue, fixture job, citations, edit/approval/reload and stale second tab, followed by a new differently cited suggestion, unapproved refresh state, blocked custom payment commitment and fresh approval, with screenshots.
+```sh
+make verify
+uv run playwright install chromium
+BROWSER_EVIDENCE_DIR="$PWD/.browser-evidence" make browser
+```
 
-The browser test runs the worker through a separate database thread while the browser session stays open. The lock-wait regression uses actual PostgreSQL locks and elapsed wall time, not a mocked clock. Concurrency tests open separate database connections.
+`make verify` checks frozen dependencies, Django configuration, migration drift, Ruff lint/format, mypy, all nonbrowser tests and the six frozen functional evaluations. Browser verification is a separate required workflow gate. `uv run pytest` runs the combined test suite.
 
-## Evidence
+Browser screenshots use a newly created temporary directory by default. Set `BROWSER_EVIDENCE_DIR` to retain them in a writable destination; the directory is created automatically. The repository ignores `.browser-evidence/`.
 
-Evidence is outside Git at /Users/dw/code/portfolio-python/python-evidence/support-operations-desk/. Genuine missing-behavior failures are retained in red-behavior.log; focused regression logs cover import/commands, changed-event race, polling expiry, new suggestion revision and final-lock deadline expiry. GREEN logs, final verification output, browser output and implementation-report.md record observed outcomes. approved-review.png, stale-conflict.png and workflow-review.jpg show the tested review workflow.
+## Recorded result
 
-The RED logs also preserve initial test-harness issues where present. Missing imports/configuration and selector mistakes are not represented as behavioral proof. red-behavior.log is the explicit PostgreSQL 20-failure behavioral baseline; red-lock-wait.log is the real lock-expiry reproducer. make verify excludes the browser only because it is run separately as an explicit required gate.
+On 2026-10-26 at code commit `8b77bb8498cc68a535746d691e7aa843094b06cd`, verification passed with Python 3.12.15 and PostgreSQL 16.15: **43 nonbrowser tests, one Chromium workflow, and 6/6 frozen fixture evaluations**. Static checks and migration drift checks passed. Full execution logs were retained outside this repository during development; this public checkout includes the [synthetic workflow screenshot](images/workflow-review.jpg).
 
-No live API calls, live-model benchmarks, deployments or production measurements are part of these checks.
+## Behavioral coverage
 
-Fix-round evidence is retained in fix1-red-review-findings.log (four original behavioral failures), fix1-red-independent-boundaries.log (seven independent failures against the reviewed boundary code with fixes restored in finally), fix1-green-review-findings.log, fix1-verify-final.log and fix1-pytest-final.log. new-evidence-review.png shows the superseding suggestion awaiting review.
+- Policy boundaries and customer prompt-injection nonauthority.
+- Exact/conflicting import retries, batch rollback/caps and concurrent changed events.
+- Stale review revisions, bounded statement composition, independent provider/human commitment rejection, and A → approve → B → reload provenance.
+- Missing/old/forged evidence bases, invalid citations, explicit provider errors and unknown usage.
+- Concurrent claims, cancellation/reclaim/expiry fences and publication expiry while waiting for the final ticket lock.
+- Tenant HTTP boundaries, session/CSRF requirements, portable artifact destinations and application-specific cookie names.
+- Chromium login, urgent queue, job execution, citations, editing/approval/reload, stale second tab and a newer differently cited suggestion requiring review.
 
-Whole-delivery portability: browser artifacts use a writable temporary directory by default; BROWSER_EVIDENCE_DIR overrides/creates the destination (for example `$PWD/.browser-evidence`). Final VPS evidence explicitly sets BROWSER_EVIDENCE_DIR=/Users/dw/code/portfolio-python/python-evidence/support-operations-desk. Per-product session/CSRF cookie names preserve same-browser logins across loopback ports; a retained cross-product Playwright probe exercises concurrent sessions and saved CSRF forms without disabling protection.
+Concurrency tests open separate PostgreSQL connections. The final-lock expiry regression uses actual row locks and elapsed time. Browser verification runs the worker on another database thread.
+
+Development retained behavioral RED and GREEN evidence, including the original promise/provenance defects and their fixes. Missing imports, selector mistakes and harness errors were recorded separately rather than counted as behavioral failures.
+
+These checks exercise synthetic local behavior. No live API calls, model benchmarks, deployments or production measurements were performed.

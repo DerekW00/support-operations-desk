@@ -7,3 +7,5 @@ The repository started from an empty seed commit. It is an independent Python ap
 Implemented contributions include deterministic SLA policy, canonical idempotent ingestion, PostgreSQL ownership and deadline fences, explicit unknown provider usage, tenant-scoped sessions/CSRF, cited suggestions, revision-based human review, synthetic functional evaluations and browser workflow checks. These are implementation facts, not claims of production use or business impact.
 
 Third-party dependencies retain their own licenses. The vendored HTMX 2.0.8 runtime is accompanied by static/vendor/HTMX-LICENSE.txt. All other interface styles and synthetic text were newly authored here.
+
+Original project material is licensed under the [MIT License](../LICENSE), copyright 2026 Derek Derui Wang. The public workflow image is a screenshot of the same synthetic browser test; it contains no customer records or private assets.
